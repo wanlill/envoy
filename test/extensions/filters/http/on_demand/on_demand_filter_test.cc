@@ -80,6 +80,7 @@ TEST_F(OnDemandFilterTest, TestDecodeHeadersWhenRouteAvailableButClusterIsNotAva
 TEST_F(OnDemandFilterTest, TestDecodeHeadersWhenRouteAvailableButClusterNameIsEmpty) {
   setupWithCDS();
   Http::TestRequestHeaderMapImpl headers;
+  EXPECT_CALL(decoder_callbacks_, clusterInfo()).WillOnce(Return(nullptr));
   decoder_callbacks_.route_->route_entry_.cluster_name_ = "";
   EXPECT_EQ(Http::FilterHeadersStatus::Continue, filter_->decodeHeaders(headers, true));
 }

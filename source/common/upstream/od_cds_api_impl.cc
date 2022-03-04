@@ -32,9 +32,11 @@ OdCdsApiImpl::OdCdsApiImpl(const envoy::config::core::v3::ConfigSource& odcds_co
   if (!odcds_resources_locator.has_value()) {
     subscription_ = cm_.subscriptionFactory().subscriptionFromConfigSource(
         odcds_config, Grpc::Common::typeUrl(resource_name), *scope_, *this, resource_decoder_, {});
+    collection_ = false;
   } else {
     subscription_ = cm.subscriptionFactory().collectionSubscriptionFromUrl(
         *odcds_resources_locator, odcds_config, resource_name, *scope_, *this, resource_decoder_);
+    collection_ = true;
   }
 }
 
@@ -92,7 +94,12 @@ void OdCdsApiImpl::updateOnDemand(std::string cluster_name) {
   case StartStatus::NotStarted:
     ENVOY_LOG(trace, "odcds: starting a subscription with cluster name {}", cluster_name);
     status_ = StartStatus::Started;
-    subscription_->start({std::move(cluster_name)});
+    if (collection_) {
+      subscription_->start({});
+      subscription_->requestOnDemandUpdate({std::move(cluster_name)});
+    } else {
+      subscription_->start({std::move(cluster_name)});
+    }
     return;
 
   case StartStatus::Started:
