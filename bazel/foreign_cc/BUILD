@@ -8,12 +8,12 @@ exports_files(["icu_data_filter.json"])
 
 envoy_package()
 
-configure_make(
-    name = "liburing",
-    configure_in_place = True,
-    lib_source = "@com_github_axboe_liburing//:all",
-    tags = ["skip_on_windows"],
-)
+#configure_make(
+#    name = "liburing",
+#    configure_in_place = True,
+#    lib_source = "@com_github_axboe_liburing//:all",
+#    tags = ["skip_on_windows"],
+#)
 
 # autotools packages are unusable on Windows as-is
 # TODO: Consider our own gperftools.BUILD file as we do with many other packages
