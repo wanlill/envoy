@@ -118,7 +118,7 @@ if __name__ == "__main__":
             "//source/...",
             "//test/...",
             "//tools/...",
-            "//contrib/...",
+            #"//contrib/...",
         ])
     args = parser.parse_args()
     fix_compilation_database(args, generate_compilation_database(args))
