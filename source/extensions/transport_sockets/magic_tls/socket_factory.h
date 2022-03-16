@@ -20,7 +20,7 @@ class MagicTlsSocketFactory : public Network::CommonTransportSocketFactory,
                                Logger::Loggable<Logger::Id::config> {
 public:
   MagicTlsSocketFactory(Network::TransportSocketFactoryPtr cleartext_socket_factory,
-                         Network::TransportSocketFactoryPtr tls_socket_factory, Stats::Scope& stats_scope);
+                         Network::TransportSocketFactoryPtr tls_socket_factory);
 
   ~MagicTlsSocketFactory() override;
 
@@ -37,7 +37,6 @@ public:
 private:
   Network::TransportSocketFactoryPtr cleartext_socket_factory_;
   Network::TransportSocketFactoryPtr tls_socket_factory_;
-  Stats::Scope& stats_scope_;
 };
 
 } // namespace Tls

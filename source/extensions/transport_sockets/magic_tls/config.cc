@@ -26,8 +26,7 @@ Network::TransportSocketFactoryPtr MagicTlsSocketConfigFactory::createTransportS
 
   return std::make_unique<MagicTlsSocketFactory>(
       raw_buffer_socket_factory.createTransportSocketFactory(config.cleartext_socket_config(), context),
-      upstream_ssl_socket_factory.createTransportSocketFactory(config.tls_socket_config(), context),
-      context.scope());
+      upstream_ssl_socket_factory.createTransportSocketFactory(config.tls_socket_config(), context));
 }
 
 ProtobufTypes::MessagePtr MagicTlsSocketConfigFactory::createEmptyConfigProto() {
