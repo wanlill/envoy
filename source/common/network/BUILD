@@ -109,6 +109,17 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "magic_tls_connection_impl_lib",
+    srcs = ["magic_tls_connection_impl.cc"],
+    hdrs = ["magic_tls_connection_impl.h"],
+    deps = [
+        "//source/extensions/transport_sockets/magic_tls:socket_factory_lib",
+        ":connection_base_lib",
+        ":connection_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "filter_lib",
     hdrs = ["filter_impl.h"],
     deps = [

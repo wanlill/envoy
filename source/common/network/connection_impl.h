@@ -185,6 +185,7 @@ protected:
 
 private:
   friend class HappyEyeballsConnectionImpl;
+  friend class MagicTlsConnectionImpl;
   friend class Envoy::RandomPauseFilter;
   friend class Envoy::TestPauseFilter;
 

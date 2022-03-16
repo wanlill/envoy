@@ -37,6 +37,7 @@
 #include "source/common/http/utility.h"
 #include "source/common/network/address_impl.h"
 #include "source/common/network/happy_eyeballs_connection_impl.h"
+#include "source/common/network/magic_tls_connection_impl.h"
 #include "source/common/network/resolver_impl.h"
 #include "source/common/network/socket_option_factory.h"
 #include "source/common/network/socket_option_impl.h"
@@ -337,15 +338,22 @@ Network::ClientConnectionPtr HostImpl::createConnection(
   ASSERT(!address->envoyInternalAddress() ||
          Runtime::runtimeFeatureEnabled("envoy.reloadable_features.internal_address"));
 
-  Network::ClientConnectionPtr connection =
-      address_list.size() > 1
-          ? std::make_unique<Network::HappyEyeballsConnectionImpl>(
-                dispatcher, address_list, cluster.sourceAddress(), socket_factory,
-                transport_socket_options, connection_options)
-          : dispatcher.createClientConnection(
-                address, cluster.sourceAddress(),
-                socket_factory.createTransportSocket(std::move(transport_socket_options)),
-                connection_options);
+  Network::ClientConnectionPtr connection;
+  if (cluster.name() == "magic_tls") {
+    connection = std::make_unique<Network::MagicTlsConnectionImpl>(
+        dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
+        connection_options);
+  } else {
+    connection = 
+        address_list.size() > 1
+            ? std::make_unique<Network::HappyEyeballsConnectionImpl>(
+                  dispatcher, address_list, cluster.sourceAddress(), socket_factory,
+                  transport_socket_options, connection_options)
+            : dispatcher.createClientConnection(
+                  address, cluster.sourceAddress(),
+                  socket_factory.createTransportSocket(std::move(transport_socket_options)),
+                  connection_options);
+  }
 
   connection->setBufferLimits(cluster.perConnectionBufferLimitBytes());
   cluster.createNetworkFilterChain(*connection);

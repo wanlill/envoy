@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package envoy.extensions.transport_sockets.magic_tls.v3;
+
+import "envoy/config/core/v3/extension.proto";
+import "envoy/extensions/transport_sockets/raw_buffer/v3/raw_buffer.proto";
+import "envoy/extensions/transport_sockets/tls/v3/tls.proto";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
+
+import "envoy/annotations/deprecation.proto";
+import "udpa/annotations/status.proto";
+import "udpa/annotations/versioning.proto";
+import "validate/validate.proto";
+
+option java_package = "io.envoyproxy.envoy.extensions.transport_sockets.magic_tls.v3";
+option java_outer_classname = "MagicTlsProto";
+option java_multiple_files = true;
+option go_package = "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/magic_tls/v3;magictlsv3";
+option (udpa.annotations.file_status).package_version_status = ACTIVE;
+
+// [#protodoc-title: Magic TLS transport socket]
+// [#extension: envoy.transport_sockets.magic_tls]
+// The Magic TLS contexts below provide the transport socket configuration for upstream/downstream TLS.
+
+message UpstreamMagicTlsContext {
+  // Configuration for an upstream TLS socket.
+  transport_sockets.tls.v3.UpstreamTlsContext tls_socket_config = 1
+      [(validate.rules).message = {required: true}];
+
+  // Configuration for clear-text socket used at the beginning of the session.
+  raw_buffer.v3.RawBuffer cleartext_socket_config = 2
+      [(validate.rules).message = {required: true}];
+}

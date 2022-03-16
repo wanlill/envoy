@@ -553,6 +553,7 @@ envoy_cc_library(
         "//source/common/http:utility_lib",
         "//source/common/network:address_lib",
         "//source/common/network:happy_eyeballs_connection_impl_lib",
+        "//source/common/network:magic_tls_connection_impl_lib",
         "//source/common/network:resolver_lib",
         "//source/common/network:socket_option_factory_lib",
         "//source/common/network:socket_option_lib",

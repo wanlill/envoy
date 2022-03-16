@@ -60,6 +60,7 @@ namespace Logger {
   FUNCTION(kafka)                                                                                  \
   FUNCTION(key_value_store)                                                                        \
   FUNCTION(lua)                                                                                    \
+  FUNCTION(magic_tls)                                                                              \
   FUNCTION(main)                                                                                   \
   FUNCTION(matcher)                                                                                \
   FUNCTION(misc)                                                                                   \
