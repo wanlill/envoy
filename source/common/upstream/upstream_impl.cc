@@ -339,7 +339,7 @@ Network::ClientConnectionPtr HostImpl::createConnection(
          Runtime::runtimeFeatureEnabled("envoy.reloadable_features.internal_address"));
 
   Network::ClientConnectionPtr connection;
-  if (cluster.name() == "magic_tls") {
+  if (cluster.metadata().filter_metadata().contains("magic_tls")) {
     connection = std::make_unique<Network::MagicTlsConnectionImpl>(
         dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
         connection_options);

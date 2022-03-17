@@ -391,12 +391,12 @@ ClientConnectionPtr MagicTlsConnectionImpl::createNextConnection() {
   auto* socket_factory =
       dynamic_cast<Extensions::TransportSockets::MagicTls::MagicTlsSocketFactory*>(
           &connection_construction_state_.socket_factory_);
+  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] address={}", id_, next_connection_);
   auto connection = dispatcher_.createClientConnection(
       address_, connection_construction_state_.source_address_,
       socket_factory->createTransportSocket(
           connection_construction_state_.transport_socket_options_, next_connection_++),
       connection_construction_state_.options_);
-  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] address={}", id_, next_connection_);
   callbacks_wrappers_.push_back(std::make_unique<ConnectionCallbacksWrapper>(*this, *connection));
   connection->addConnectionCallbacks(*callbacks_wrappers_.back());
 
