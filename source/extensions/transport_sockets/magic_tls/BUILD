@@ -17,6 +17,7 @@ envoy_cc_extension(
     visibility = ["//visibility:public"],
     deps = [
         ":socket_factory_lib",
+        "//source/extensions/transport_sockets/raw_buffer:config",
         "//source/extensions/transport_sockets/tls:config",
         "//envoy/network:transport_socket_interface",
         "//envoy/registry",
