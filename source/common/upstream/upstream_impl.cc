@@ -340,10 +340,12 @@ Network::ClientConnectionPtr HostImpl::createConnection(
 
   Network::ClientConnectionPtr connection;
   if (cluster.metadata().filter_metadata().contains("magic_tls")) {
+    ENVOY_LOG(debug, "magic_tls conn impl");
     connection = std::make_unique<Network::MagicTlsConnectionImpl>(
         dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
         connection_options);
   } else {
+    ENVOY_LOG(debug, "not magic_tls conn impl");
     connection = 
         address_list.size() > 1
             ? std::make_unique<Network::HappyEyeballsConnectionImpl>(
