@@ -1,9 +1,71 @@
 #include "source/common/network/happy_eyeballs_connection_impl.h"
+#include "connection_impl.h"
 
 #include <vector>
 
 namespace Envoy {
 namespace Network {
+
+HappyEyeballsConnectionProvider::HappyEyeballsConnectionProvider(
+    Event::Dispatcher& dispatcher, const std::vector<Address::InstanceConstSharedPtr>& address_list,
+    Address::InstanceConstSharedPtr source_address, TransportSocketFactory& socket_factory,
+    TransportSocketOptionsConstSharedPtr transport_socket_options,
+    const ConnectionSocket::OptionsSharedPtr options)
+    : dispatcher_(dispatcher),
+      address_list_(sortAddresses(address_list)),
+      source_address_(source_address),
+      socket_factory_(socket_factory),
+      transport_socket_options_(transport_socket_options),
+      options_(options) {}
+
+bool HappyEyeballsConnectionProvider::hasNextConnection() {
+  return next_address_ < address_list_.size();
+}
+
+ClientConnectionPtr HappyEyeballsConnectionProvider::createNextConnection() {
+  ASSERT(hasNextConnection());
+  return dispatcher_.createClientConnection(
+      address_list_[next_address_++], source_address_,
+      socket_factory_.createTransportSocket(transport_socket_options_), options_);
+}
+
+std::vector<Address::InstanceConstSharedPtr>
+HappyEyeballsConnectionProvider::sortAddresses(const std::vector<Address::InstanceConstSharedPtr>& in) {
+  std::vector<Address::InstanceConstSharedPtr> address_list;
+  address_list.reserve(in.size());
+  // Iterator which will advance through all addresses matching the first family.
+  auto first = in.begin();
+  // Iterator which will advance through all addresses not matching the first family.
+  // This initial value is ignored and will be overwritten in the loop below.
+  auto other = in.begin();
+  while (first != in.end() || other != in.end()) {
+    if (first != in.end()) {
+      address_list.push_back(*first);
+      first = std::find_if(first + 1, in.end(),
+                           [&](const auto& val) { return hasMatchingAddressFamily(in[0], val); });
+    }
+
+    if (other != in.end()) {
+      other = std::find_if(other + 1, in.end(),
+                           [&](const auto& val) { return !hasMatchingAddressFamily(in[0], val); });
+
+      if (other != in.end()) {
+        address_list.push_back(*other);
+      }
+    }
+  }
+  ASSERT(address_list.size() == in.size());
+  return address_list;
+}
+
+HappyEyeballsConnectionImpl::HappyEyeballsConnectionImpl(
+    Event::Dispatcher& dispatcher, ConnectionProviderPtr connection_provider)
+    : id_(ConnectionImpl::next_global_id_++), dispatcher_(dispatcher),
+      connection_provider_(std::move(connection_provider)),
+      next_attempt_timer_(dispatcher_.createTimer([this]() -> void { tryAnotherConnection(); })) {
+  ENVOY_LOG_EVENT(debug, "happy_eyeballs_new_cx", "[C{}] addresses={}", id_, address_list_.size());
+  connections_.push_back(createNextConnection());
+}
 
 HappyEyeballsConnectionImpl::HappyEyeballsConnectionImpl(
     Event::Dispatcher& dispatcher, const std::vector<Address::InstanceConstSharedPtr>& address_list,

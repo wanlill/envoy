@@ -37,6 +37,8 @@ public:
   virtual ClientConnectionPtr createNextConnection() PURE;
 };
 
+using ConnectionProviderPtr = std::unique_ptr<ConnectionProvider>;
+
 /**
  * Implementation of ConnectionProvider for HappyEyeballs. It provides client
  * connections to multiple addresses in an specific order complying to
@@ -52,11 +54,22 @@ public:
                                   const ConnectionSocket::OptionsSharedPtr options);
   bool hasNextConnection() override;
   ClientConnectionPtr createNextConnection() override;
+  // Returns a new vector containing the contents of |address_list| sorted
+  // with address families interleaved, as per Section 4 of RFC 8305, Happy
+  // Eyeballs v2. It is assumed that the list must already be sorted as per
+  // Section 6 of RFC6724, which happens in the DNS implementations (ares_getaddrinfo()
+  // and Apple DNS).
+  static std::vector<Address::InstanceConstSharedPtr>
+  sortAddresses(const std::vector<Address::InstanceConstSharedPtr>& address_list);
 
 private:
   Event::Dispatcher& dispatcher_;
-  // List of addresses to attempt to connect to.
   const std::vector<Address::InstanceConstSharedPtr> address_list_;
+  // List of addresses to attempt to connect to.
+  Address::InstanceConstSharedPtr source_address_;
+  TransportSocketFactory& socket_factory_;
+  TransportSocketOptionsConstSharedPtr transport_socket_options_;
+  const ConnectionSocket::OptionsSharedPtr options_;
   // Index of the next address to use.
   size_t next_address_ = 0;
 };
@@ -79,6 +92,7 @@ private:
 class HappyEyeballsConnectionImpl : public ClientConnection,
                                     Logger::Loggable<Logger::Id::happy_eyeballs> {
 public:
+  HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher, ConnectionProviderPtr connection_provider);
   HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher,
                               const std::vector<Address::InstanceConstSharedPtr>& address_list,
                               Address::InstanceConstSharedPtr source_address,
@@ -255,6 +269,8 @@ private:
   size_t next_address_ = 0;
 
   ConnectionConstructionState connection_construction_state_;
+  ConnectionProviderPtr connection_provider_;
+
   PerConnectionState per_connection_state_;
   PostConnectState post_connect_state_;
 
