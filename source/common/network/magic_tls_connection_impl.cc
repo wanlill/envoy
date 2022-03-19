@@ -1,7 +1,8 @@
 #include "source/common/network/magic_tls_connection_impl.h"
-#include "source/extensions/transport_sockets/magic_tls/socket_factory.h"
 
 #include <vector>
+
+#include "source/extensions/transport_sockets/magic_tls/socket_factory.h"
 
 namespace Envoy {
 namespace Network {
@@ -11,8 +12,7 @@ MagicTlsConnectionImpl::MagicTlsConnectionImpl(
     Address::InstanceConstSharedPtr source_address, TransportSocketFactory& socket_factory,
     TransportSocketOptionsConstSharedPtr transport_socket_options,
     const ConnectionSocket::OptionsSharedPtr options)
-    : id_(ConnectionImpl::next_global_id_++), dispatcher_(dispatcher),
-      address_(address),
+    : id_(ConnectionImpl::next_global_id_++), dispatcher_(dispatcher), address_(address),
       connection_construction_state_(
           {source_address, socket_factory, transport_socket_options, options}),
       next_attempt_timer_(dispatcher_.createTimer([this]() -> void { tryAnotherConnection(); })) {
@@ -107,13 +107,9 @@ void MagicTlsConnectionImpl::enableHalfClose(bool enabled) {
   }
 }
 
-bool MagicTlsConnectionImpl::isHalfCloseEnabled() {
-  return connections_[0]->isHalfCloseEnabled();
-}
+bool MagicTlsConnectionImpl::isHalfCloseEnabled() { return connections_[0]->isHalfCloseEnabled(); }
 
-std::string MagicTlsConnectionImpl::nextProtocol() const {
-  return connections_[0]->nextProtocol();
-}
+std::string MagicTlsConnectionImpl::nextProtocol() const { return connections_[0]->nextProtocol(); }
 
 void MagicTlsConnectionImpl::noDelay(bool enable) {
   if (!connect_finished_) {
@@ -162,8 +158,7 @@ const ConnectionInfoProvider& MagicTlsConnectionImpl::connectionInfoProvider() c
   return connections_[0]->connectionInfoProvider();
 }
 
-ConnectionInfoProviderSharedPtr
-MagicTlsConnectionImpl::connectionInfoProviderSharedPtr() const {
+ConnectionInfoProviderSharedPtr MagicTlsConnectionImpl::connectionInfoProviderSharedPtr() const {
   return connections_[0]->connectionInfoProviderSharedPtr();
 }
 
@@ -442,8 +437,7 @@ void MagicTlsConnectionImpl::maybeScheduleNextAttempt() {
   next_attempt_timer_->enableTimer(std::chrono::milliseconds(300));
 }
 
-void MagicTlsConnectionImpl::onEvent(ConnectionEvent event,
-                                          ConnectionCallbacksWrapper* wrapper) {
+void MagicTlsConnectionImpl::onEvent(ConnectionEvent event, ConnectionCallbacksWrapper* wrapper) {
   if (event == ConnectionEvent::Connected) {
     ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_ok", "address={}", *this, next_connection_);
   } else {
@@ -465,8 +459,7 @@ void MagicTlsConnectionImpl::onEvent(ConnectionEvent event,
     ASSERT(connections_.size() == 1);
     // This connection attempt failed but there are no more attempts to be made, so pass
     // the failure up by setting up this connection as the final one.
-    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_failed", "addresses={}", *this,
-                         2);
+    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_failed", "addresses={}", *this, 2);
   }
 
   // Close all other connections and configure the final connection.
@@ -474,7 +467,7 @@ void MagicTlsConnectionImpl::onEvent(ConnectionEvent event,
 }
 
 void MagicTlsConnectionImpl::setUpFinalConnection(ConnectionEvent event,
-                                                       ConnectionCallbacksWrapper* wrapper) {
+                                                  ConnectionCallbacksWrapper* wrapper) {
   connect_finished_ = true;
   ENVOY_LOG(trace, "Disabling next attempt timer due to final connection.");
   next_attempt_timer_->disableTimer();

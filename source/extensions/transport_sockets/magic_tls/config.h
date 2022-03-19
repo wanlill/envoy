@@ -12,8 +12,9 @@ namespace MagicTls {
  * Config registration for the MagicTls transport socket factory.
  * @see TransportSocketConfigFactory.
  */
-class MagicTlsSocketConfigFactory : public Server::Configuration::UpstreamTransportSocketConfigFactory,
-                                    public virtual Server::Configuration::TransportSocketConfigFactory {
+class MagicTlsSocketConfigFactory
+    : public Server::Configuration::UpstreamTransportSocketConfigFactory,
+      public virtual Server::Configuration::TransportSocketConfigFactory {
 public:
   ~MagicTlsSocketConfigFactory() override = default;
   std::string name() const override { return "envoy.transport_sockets.magic_tls"; }

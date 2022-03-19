@@ -346,15 +346,14 @@ Network::ClientConnectionPtr HostImpl::createConnection(
         connection_options);
   } else {
     ENVOY_LOG(debug, "not magic_tls conn impl");
-    connection = 
-        address_list.size() > 1
-            ? std::make_unique<Network::HappyEyeballsConnectionImpl>(
-                  dispatcher, address_list, cluster.sourceAddress(), socket_factory,
-                  transport_socket_options, connection_options)
-            : dispatcher.createClientConnection(
-                  address, cluster.sourceAddress(),
-                  socket_factory.createTransportSocket(std::move(transport_socket_options)),
-                  connection_options);
+    connection = address_list.size() > 1
+                     ? std::make_unique<Network::HappyEyeballsConnectionImpl>(
+                           dispatcher, address_list, cluster.sourceAddress(), socket_factory,
+                           transport_socket_options, connection_options)
+                     : dispatcher.createClientConnection(address, cluster.sourceAddress(),
+                                                         socket_factory.createTransportSocket(
+                                                             std::move(transport_socket_options)),
+                                                         connection_options);
   }
 
   connection->setBufferLimits(cluster.perConnectionBufferLimitBytes());

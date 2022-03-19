@@ -32,15 +32,13 @@ namespace Network {
  * TODO(RyanTheOptimist): Implement the Happy Eyeballs address sorting algorithm
  * either in the class or in the resolution code.
  */
-class MagicTlsConnectionImpl : public ClientConnection,
-                                    Logger::Loggable<Logger::Id::magic_tls> {
+class MagicTlsConnectionImpl : public ClientConnection, Logger::Loggable<Logger::Id::magic_tls> {
 public:
-  MagicTlsConnectionImpl(Event::Dispatcher& dispatcher,
-                              Address::InstanceConstSharedPtr address,
-                              Address::InstanceConstSharedPtr source_address,
-                              TransportSocketFactory& socket_factory,
-                              TransportSocketOptionsConstSharedPtr transport_socket_options,
-                              const ConnectionSocket::OptionsSharedPtr options);
+  MagicTlsConnectionImpl(Event::Dispatcher& dispatcher, Address::InstanceConstSharedPtr address,
+                         Address::InstanceConstSharedPtr source_address,
+                         TransportSocketFactory& socket_factory,
+                         TransportSocketOptionsConstSharedPtr transport_socket_options,
+                         const ConnectionSocket::OptionsSharedPtr options);
 
   ~MagicTlsConnectionImpl() override;
 

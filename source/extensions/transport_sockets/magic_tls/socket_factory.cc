@@ -1,7 +1,8 @@
 #include "source/extensions/transport_sockets/magic_tls/socket_factory.h"
-#include "source/extensions/transport_sockets/tls/ssl_socket.h"
 
 #include "envoy/stats/scope.h"
+
+#include "source/extensions/transport_sockets/tls/ssl_socket.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -20,8 +21,9 @@ void MagicTlsSocketFactory::onAddOrUpdateSecret() {
   dynamic_cast<Tls::ClientSslSocketFactory*>(tls_socket_factory_.get())->onAddOrUpdateSecret();
 }
 
-Network::TransportSocketPtr MagicTlsSocketFactory::createTransportSocket(
-    Network::TransportSocketOptionsConstSharedPtr options, int n) const {
+Network::TransportSocketPtr
+MagicTlsSocketFactory::createTransportSocket(Network::TransportSocketOptionsConstSharedPtr options,
+                                             int n) const {
   if (n % 2 == 0) {
     return tls_socket_factory_->createTransportSocket(options);
   }

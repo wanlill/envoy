@@ -17,11 +17,11 @@ envoy_cc_extension(
     visibility = ["//visibility:public"],
     deps = [
         ":socket_factory_lib",
-        "//source/extensions/transport_sockets/raw_buffer:config",
-        "//source/extensions/transport_sockets/tls:config",
         "//envoy/network:transport_socket_interface",
         "//envoy/registry",
         "//envoy/server:transport_socket_config_interface",
+        "//source/extensions/transport_sockets/raw_buffer:config",
+        "//source/extensions/transport_sockets/tls:config",
         "@envoy_api//envoy/extensions/transport_sockets/magic_tls/v3:pkg_cc_proto",
     ],
 )

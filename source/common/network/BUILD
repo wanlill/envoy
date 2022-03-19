@@ -113,9 +113,9 @@ envoy_cc_library(
     srcs = ["magic_tls_connection_impl.cc"],
     hdrs = ["magic_tls_connection_impl.h"],
     deps = [
-        "//source/extensions/transport_sockets/magic_tls:socket_factory_lib",
         ":connection_base_lib",
         ":connection_lib",
+        "//source/extensions/transport_sockets/magic_tls:socket_factory_lib",
     ],
 )
 

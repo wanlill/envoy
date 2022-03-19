@@ -20,7 +20,7 @@ namespace Network {
 /**
  * An abstract class for providing next ClientConnectionPtr that can should used by
  * the HappyEyeballsConnectionImpl. Classes can inherit this class to provide
- * different kinds of connection creation strategies. 
+ * different kinds of connection creation strategies.
  */
 class ConnectionProvider {
 public:
@@ -35,7 +35,6 @@ public:
    * Create next client connection.
    */
   virtual ClientConnectionPtr createNextConnection() PURE;
-
 };
 
 /**

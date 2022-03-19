@@ -16,11 +16,11 @@ namespace TransportSockets {
 namespace MagicTls {
 
 class MagicTlsSocketFactory : public Network::CommonTransportSocketFactory,
-                               public Secret::SecretCallbacks,
-                               Logger::Loggable<Logger::Id::config> {
+                              public Secret::SecretCallbacks,
+                              Logger::Loggable<Logger::Id::config> {
 public:
   MagicTlsSocketFactory(Network::TransportSocketFactoryPtr cleartext_socket_factory,
-                         Network::TransportSocketFactoryPtr tls_socket_factory);
+                        Network::TransportSocketFactoryPtr tls_socket_factory);
 
   ~MagicTlsSocketFactory() override;
 
@@ -39,7 +39,7 @@ private:
   Network::TransportSocketFactoryPtr tls_socket_factory_;
 };
 
-} // namespace Tls
+} // namespace MagicTls
 } // namespace TransportSockets
 } // namespace Extensions
 } // namespace Envoy
