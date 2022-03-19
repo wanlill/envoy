@@ -18,6 +18,51 @@ namespace Envoy {
 namespace Network {
 
 /**
+ * An abstract class for providing next ClientConnectionPtr that can should used by
+ * the HappyEyeballsConnectionImpl. Classes can inherit this class to provide
+ * different kinds of connection creation strategies. 
+ */
+class ConnectionProvider {
+public:
+  virtual ~ConnectionProvider() = default;
+
+  /**
+   * Whether there's still next connection to try.
+   */
+  virtual bool hasNextConnection() PURE;
+
+  /**
+   * Create next client connection.
+   */
+  virtual ClientConnectionPtr createNextConnection() PURE;
+
+};
+
+/**
+ * Implementation of ConnectionProvider for HappyEyeballs. It provides client
+ * connections to multiple addresses in an specific order complying to
+ * HappyEyeballs.
+ */
+class HappyEyeballsConnectionProvider : public virtual ConnectionProvider {
+public:
+  HappyEyeballsConnectionProvider(Event::Dispatcher& dispatcher,
+                                  const std::vector<Address::InstanceConstSharedPtr>& address_list,
+                                  Address::InstanceConstSharedPtr source_address,
+                                  TransportSocketFactory& socket_factory,
+                                  TransportSocketOptionsConstSharedPtr transport_socket_options,
+                                  const ConnectionSocket::OptionsSharedPtr options);
+  bool hasNextConnection() override;
+  ClientConnectionPtr createNextConnection() override;
+
+private:
+  Event::Dispatcher& dispatcher_;
+  // List of addresses to attempt to connect to.
+  const std::vector<Address::InstanceConstSharedPtr> address_list_;
+  // Index of the next address to use.
+  size_t next_address_ = 0;
+};
+
+/**
  * Implementation of ClientConnection which transparently attempts connections to
  * multiple different IP addresses, and uses the first connection that succeeds.
  * After a connection is established, all methods simply delegate to the
