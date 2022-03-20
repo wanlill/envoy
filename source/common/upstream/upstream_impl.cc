@@ -346,7 +346,7 @@ Network::ClientConnectionPtr HostImpl::createConnection(
   } else if (cluster.metadata().filter_metadata().contains("envoy.transport_socket_list")) {
     ENVOY_LOG(debug,
               "creating a HappyEyeballsConnectionImpl with a TransportSocketConnectionProvider");
-    std::vector<Network::TransportSocketFactory*> factories{&socket_factory};
+    std::vector<Network::TransportSocketFactory*> factories;
     absl::node_hash_set<std::string> names;
     const auto s = cluster.metadata().filter_metadata().find("envoy.transport_socket_list")->second;
     auto sockets = s.fields().find("sockets")->second;

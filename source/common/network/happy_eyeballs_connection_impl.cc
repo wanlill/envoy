@@ -86,8 +86,9 @@ bool TransportSocketConnectionProvider::hasNextConnection() {
 
 ClientConnectionPtr TransportSocketConnectionProvider::createNextConnection(const uint64_t id) {
   ASSERT(hasNextConnection());
-  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] next_factory={} factory {}", id,
-                  next_factory_, static_cast<void*>(socket_factories_[next_factory_]));
+  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] next_factory={} total={} factory {}",
+                  id, next_factory_, socket_factories_.size(),
+                  static_cast<void*>(socket_factories_[next_factory_]));
   return dispatcher_.createClientConnection(
       address_, source_address_,
       socket_factories_[next_factory_++]->createTransportSocket(transport_socket_options_),
