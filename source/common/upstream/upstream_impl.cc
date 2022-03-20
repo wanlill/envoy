@@ -339,21 +339,42 @@ Network::ClientConnectionPtr HostImpl::createConnection(
          Runtime::runtimeFeatureEnabled("envoy.reloadable_features.internal_address"));
 
   Network::ClientConnectionPtr connection;
-  if (cluster.metadata().filter_metadata().contains("magic_tls")) {
-    ENVOY_LOG(debug, "magic_tls conn impl");
-    connection = std::make_unique<Network::MagicTlsConnectionImpl>(
-        dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
-        connection_options);
+  if (cluster.metadata().filter_metadata().contains("envoy.transport_socket_list")) {
+    ENVOY_LOG(debug, "creating a HappyEyeballsConnectionImpl with a TransportSocketConnectionProvider");
+    std::vector<Network::TransportSocketFactory*> factories{&socket_factory};
+    absl::node_hash_set<std::string> names;
+
+    const auto s = cluster.metadata().filter_metadata().find("envoy.transport_socket_list")->second;
+    auto sockets = s.fields().find("sockets")->second;
+    for (const auto &socket : sockets.list_value().values()) {
+      envoy::config::core::v3::Metadata metadata;
+      auto& match = (*metadata.mutable_filter_metadata())[Envoy::Config::MetadataFilters::get()
+                                                              .ENVOY_TRANSPORT_SOCKET_MATCH];
+      (*match.mutable_fields())[socket.string_value()].set_bool_value(true);
+      auto match_data = cluster.transportSocketMatcher().resolve(&metadata);
+      if (!names.contains(match_data.name_)) {
+        factories.emplace_back(&match_data.factory_);
+      }
+    }
+    connection = std::make_unique<Network::HappyEyeballsConnectionImpl>(
+        dispatcher, std::make_unique<Network::TransportSocketConnectionProvider>(
+                        dispatcher, address, cluster.sourceAddress(), factories,
+                        transport_socket_options, connection_options));
+    // connection = std::make_unique<Network::MagicTlsConnectionImpl>(
+    //     dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
+    //     connection_options);
+  } else if (address_list.size() > 1) {
+    ENVOY_LOG(debug,
+              "creating a HappyEyeballsConnectionImpl with a HappyEyeballsConnectionProvider");
+    connection = std::make_unique<Network::HappyEyeballsConnectionImpl>(
+        dispatcher, std::make_unique<Network::HappyEyeballsConnectionProvider>(
+                        dispatcher, address_list, cluster.sourceAddress(), socket_factory,
+                        transport_socket_options, connection_options));
   } else {
-    ENVOY_LOG(debug, "not magic_tls conn impl");
-    connection = address_list.size() > 1
-                     ? std::make_unique<Network::HappyEyeballsConnectionImpl>(
-                           dispatcher, address_list, cluster.sourceAddress(), socket_factory,
-                           transport_socket_options, connection_options)
-                     : dispatcher.createClientConnection(address, cluster.sourceAddress(),
-                                                         socket_factory.createTransportSocket(
-                                                             std::move(transport_socket_options)),
-                                                         connection_options);
+    connection = dispatcher.createClientConnection(
+        address, cluster.sourceAddress(),
+        socket_factory.createTransportSocket(std::move(transport_socket_options)),
+        connection_options);
   }
 
   connection->setBufferLimits(cluster.perConnectionBufferLimitBytes());

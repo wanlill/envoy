@@ -34,7 +34,23 @@ public:
   /**
    * Create next client connection.
    */
-  virtual ClientConnectionPtr createNextConnection() PURE;
+  virtual ClientConnectionPtr createNextConnection(const uint64_t id) PURE;
+  /**
+   * Return a string describing this connection provider for debugging purpose.
+   */
+  virtual std::string debugString() { return "ConnectionProvider"; }
+
+  /**
+   * Return the next attempt index.
+   *
+   */
+  virtual size_t nextAttempt() PURE;
+
+  /**
+   * Return the total count of attempts the connection provider will make.
+   *
+   */
+  virtual size_t totalAttempts() PURE;
 };
 
 using ConnectionProviderPtr = std::unique_ptr<ConnectionProvider>;
@@ -44,7 +60,8 @@ using ConnectionProviderPtr = std::unique_ptr<ConnectionProvider>;
  * connections to multiple addresses in an specific order complying to
  * HappyEyeballs.
  */
-class HappyEyeballsConnectionProvider : public virtual ConnectionProvider {
+class HappyEyeballsConnectionProvider : public virtual ConnectionProvider,
+                                        Logger::Loggable<Logger::Id::happy_eyeballs> {
 public:
   HappyEyeballsConnectionProvider(Event::Dispatcher& dispatcher,
                                   const std::vector<Address::InstanceConstSharedPtr>& address_list,
@@ -53,7 +70,9 @@ public:
                                   TransportSocketOptionsConstSharedPtr transport_socket_options,
                                   const ConnectionSocket::OptionsSharedPtr options);
   bool hasNextConnection() override;
-  ClientConnectionPtr createNextConnection() override;
+  ClientConnectionPtr createNextConnection(const uint64_t id) override;
+  size_t nextAttempt() override;
+  size_t totalAttempts() override;
   // Returns a new vector containing the contents of |address_list| sorted
   // with address families interleaved, as per Section 4 of RFC 8305, Happy
   // Eyeballs v2. It is assumed that the list must already be sorted as per
@@ -72,6 +91,32 @@ private:
   const ConnectionSocket::OptionsSharedPtr options_;
   // Index of the next address to use.
   size_t next_address_ = 0;
+};
+
+class TransportSocketConnectionProvider : public virtual ConnectionProvider,
+                                          Logger::Loggable<Logger::Id::happy_eyeballs> {
+public:
+  TransportSocketConnectionProvider(
+      Event::Dispatcher& dispatcher,
+      Address::InstanceConstSharedPtr address,
+      Address::InstanceConstSharedPtr source_address, const std::vector<TransportSocketFactory*>& socket_factories,
+      TransportSocketOptionsConstSharedPtr transport_socket_options,
+      const ConnectionSocket::OptionsSharedPtr options);
+  bool hasNextConnection() override;
+  ClientConnectionPtr createNextConnection(const uint64_t id) override;
+  size_t nextAttempt() override;
+  size_t totalAttempts() override;
+
+private:
+  Event::Dispatcher& dispatcher_;
+  Address::InstanceConstSharedPtr address_;
+  Address::InstanceConstSharedPtr source_address_;
+  // List of transport socket factories to try.
+  const std::vector<TransportSocketFactory*>& socket_factories_;
+  TransportSocketOptionsConstSharedPtr transport_socket_options_;
+  const ConnectionSocket::OptionsSharedPtr options_;
+  // Index of the next transport socket factory to try.
+  size_t next_factory_ = 0;
 };
 
 /**
@@ -93,12 +138,12 @@ class HappyEyeballsConnectionImpl : public ClientConnection,
                                     Logger::Loggable<Logger::Id::happy_eyeballs> {
 public:
   HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher, ConnectionProviderPtr connection_provider);
-  HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher,
-                              const std::vector<Address::InstanceConstSharedPtr>& address_list,
-                              Address::InstanceConstSharedPtr source_address,
-                              TransportSocketFactory& socket_factory,
-                              TransportSocketOptionsConstSharedPtr transport_socket_options,
-                              const ConnectionSocket::OptionsSharedPtr options);
+  // HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher,
+  //                             const std::vector<Address::InstanceConstSharedPtr>& address_list,
+  //                             Address::InstanceConstSharedPtr source_address,
+  //                             TransportSocketFactory& socket_factory,
+  //                             TransportSocketOptionsConstSharedPtr transport_socket_options,
+  //                             const ConnectionSocket::OptionsSharedPtr options);
 
   ~HappyEyeballsConnectionImpl() override;
 
@@ -263,12 +308,12 @@ private:
 
   Event::Dispatcher& dispatcher_;
 
-  // List of addresses to attempt to connect to.
-  const std::vector<Address::InstanceConstSharedPtr> address_list_;
-  // Index of the next address to use.
-  size_t next_address_ = 0;
+  // // List of addresses to attempt to connect to.
+  // const std::vector<Address::InstanceConstSharedPtr> address_list_;
+  // // Index of the next address to use.
+  // size_t next_address_ = 0;
 
-  ConnectionConstructionState connection_construction_state_;
+  // ConnectionConstructionState connection_construction_state_;
   ConnectionProviderPtr connection_provider_;
 
   PerConnectionState per_connection_state_;

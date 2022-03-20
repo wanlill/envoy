@@ -7,6 +7,7 @@
 #include "test/mocks/network/mocks.h"
 #include "test/mocks/network/transport_socket.h"
 #include "test/mocks/stream_info/mocks.h"
+#include <memory>
 
 using testing::Return;
 using testing::ReturnRef;
@@ -32,8 +33,9 @@ public:
 
     next_connections_.push_back(std::make_unique<StrictMock<MockClientConnection>>());
     impl_ = std::make_unique<HappyEyeballsConnectionImpl>(
-        dispatcher_, raw_address_list_, Address::InstanceConstSharedPtr(),
-        transport_socket_factory_, transport_socket_options_, options_);
+        dispatcher_, std::make_unique<HappyEyeballsConnectionProvider>(
+                         dispatcher_, raw_address_list_, Address::InstanceConstSharedPtr(),
+                         transport_socket_factory_, transport_socket_options_, options_));
   }
 
   // Called by the dispatcher to return a MockClientConnection. In order to allow expectations to
@@ -42,6 +44,7 @@ public:
   // next_connections_ and returns that. It also saves a pointer to that connection into
   // created_connections_ so that it can be interacted with after it has been returned.
   MockClientConnection* createNextConnection() {
+    std::cout << "createNextConnection, dispatcher " << static_cast<void*>(&dispatcher_) << " timer " << static_cast<void*>(&failover_timer_) << std::endl;
     created_connections_.push_back(next_connections_.front().release());
     next_connections_.pop_front();
     EXPECT_CALL(*created_connections_.back(), addConnectionCallbacks(_))
@@ -1073,26 +1076,26 @@ TEST_F(HappyEyeballsConnectionImplTest, SortAddresses) {
 
   // All v4 address so unchanged.
   std::vector<Address::InstanceConstSharedPtr> v4_list = {ip_v4_1, ip_v4_2, ip_v4_3, ip_v4_4};
-  EXPECT_EQ(v4_list, HappyEyeballsConnectionImpl::sortAddresses(v4_list));
+  EXPECT_EQ(v4_list, HappyEyeballsConnectionProvider::sortAddresses(v4_list));
 
   // All v6 address so unchanged.
   std::vector<Address::InstanceConstSharedPtr> v6_list = {ip_v6_1, ip_v6_2, ip_v6_3, ip_v6_4};
-  EXPECT_EQ(v6_list, HappyEyeballsConnectionImpl::sortAddresses(v6_list));
+  EXPECT_EQ(v6_list, HappyEyeballsConnectionProvider::sortAddresses(v6_list));
 
   std::vector<Address::InstanceConstSharedPtr> v6_then_v4 = {ip_v6_1, ip_v6_2, ip_v4_1, ip_v4_2};
   std::vector<Address::InstanceConstSharedPtr> interleaved = {ip_v6_1, ip_v4_1, ip_v6_2, ip_v4_2};
-  EXPECT_EQ(interleaved, HappyEyeballsConnectionImpl::sortAddresses(v6_then_v4));
+  EXPECT_EQ(interleaved, HappyEyeballsConnectionProvider::sortAddresses(v6_then_v4));
 
   std::vector<Address::InstanceConstSharedPtr> v6_then_single_v4 = {ip_v6_1, ip_v6_2, ip_v6_3,
                                                                     ip_v4_1};
   std::vector<Address::InstanceConstSharedPtr> interleaved2 = {ip_v6_1, ip_v4_1, ip_v6_2, ip_v6_3};
-  EXPECT_EQ(interleaved2, HappyEyeballsConnectionImpl::sortAddresses(v6_then_single_v4));
+  EXPECT_EQ(interleaved2, HappyEyeballsConnectionProvider::sortAddresses(v6_then_single_v4));
 
   std::vector<Address::InstanceConstSharedPtr> mixed = {ip_v6_1, ip_v6_2, ip_v6_3, ip_v4_1,
                                                         ip_v4_2, ip_v4_3, ip_v4_4, ip_v6_4};
   std::vector<Address::InstanceConstSharedPtr> interleaved3 = {ip_v6_1, ip_v4_1, ip_v6_2, ip_v4_2,
                                                                ip_v6_3, ip_v4_3, ip_v6_4, ip_v4_4};
-  EXPECT_EQ(interleaved3, HappyEyeballsConnectionImpl::sortAddresses(mixed));
+  EXPECT_EQ(interleaved3, HappyEyeballsConnectionProvider::sortAddresses(mixed));
 }
 
 } // namespace Network
