@@ -357,8 +357,13 @@ Network::ClientConnectionPtr HostImpl::createConnection(
                                                               .ENVOY_TRANSPORT_SOCKET_MATCH];
       (*match.mutable_fields())[socket.string_value()].set_bool_value(true);
       auto match_data = cluster.transportSocketMatcher().resolve(&metadata);
+      ENVOY_LOG(debug, "socket factory for {} resolved to {}", socket.string_value(),
+                match_data.name_);
       if (!names.contains(match_data.name_)) {
+        ENVOY_LOG(debug, "adding {} into factory list", match_data.name_);
         factories.emplace_back(&match_data.factory_);
+      } else {
+        ENVOY_LOG(debug, "skipped adding duplicated factory to list: {}", match_data.name_);
       }
     }
     connection = std::make_unique<Network::HappyEyeballsConnectionImpl>(

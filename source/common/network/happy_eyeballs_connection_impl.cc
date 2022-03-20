@@ -574,10 +574,10 @@ void HappyEyeballsConnectionImpl::maybeScheduleNextAttempt() {
 void HappyEyeballsConnectionImpl::onEvent(ConnectionEvent event,
                                           ConnectionCallbacksWrapper* wrapper) {
   if (event == ConnectionEvent::Connected) {
-    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_ok", "address={}", *this,
+    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_ok", "next_attempt={}", *this,
                          connection_provider_->nextAttempt());
   } else {
-    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_attempt_failed", "address={}", *this,
+    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_attempt_failed", "next_attempt={}", *this,
                          connection_provider_->nextAttempt());
     // This connection attempt has failed. If possible, start another connection attempt
     // immediately, instead of waiting for the timer.
