@@ -86,7 +86,8 @@ bool TransportSocketConnectionProvider::hasNextConnection() {
 
 ClientConnectionPtr TransportSocketConnectionProvider::createNextConnection(const uint64_t id) {
   ASSERT(hasNextConnection());
-  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] next_factory={}", id, next_factory_);
+  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] next_factory={} factory {}", id,
+                  next_factory_, static_cast<void*>(socket_factories_[next_factory_]));
   return dispatcher_.createClientConnection(
       address_, source_address_,
       socket_factories_[next_factory_++]->createTransportSocket(transport_socket_options_),
@@ -104,8 +105,6 @@ HappyEyeballsConnectionImpl::HappyEyeballsConnectionImpl(Event::Dispatcher& disp
       next_attempt_timer_(dispatcher_.createTimer([this]() -> void { tryAnotherConnection(); })) {
   ENVOY_LOG_EVENT(debug, "happy_eyeballs_new_cx", "[C{}] connection_provider={}", id_,
                   connection_provider_->debugString());
-  std::cout << "HappyEyeballsConnectionImpl, dispatcher " << static_cast<void*>(&dispatcher_)
-            << " timer " << static_cast<void*>(&next_attempt_timer_) << std::endl;
 
   connections_.push_back(createNextConnection());
 }

@@ -45,8 +45,6 @@ public:
   // next_connections_ and returns that. It also saves a pointer to that connection into
   // created_connections_ so that it can be interacted with after it has been returned.
   MockClientConnection* createNextConnection() {
-    std::cout << "createNextConnection, dispatcher " << static_cast<void*>(&dispatcher_)
-              << " timer " << static_cast<void*>(&failover_timer_) << std::endl;
     created_connections_.push_back(next_connections_.front().release());
     next_connections_.pop_front();
     EXPECT_CALL(*created_connections_.back(), addConnectionCallbacks(_))
