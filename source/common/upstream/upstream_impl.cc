@@ -339,14 +339,18 @@ Network::ClientConnectionPtr HostImpl::createConnection(
          Runtime::runtimeFeatureEnabled("envoy.reloadable_features.internal_address"));
 
   Network::ClientConnectionPtr connection;
-  if (cluster.metadata().filter_metadata().contains("envoy.transport_socket_list")) {
+  if (cluster.metadata().filter_metadata().contains("magic_tls")) {
+    connection = std::make_unique<Network::MagicTlsConnectionImpl>(
+        dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
+        connection_options);
+  } else if (cluster.metadata().filter_metadata().contains("envoy.transport_socket_list")) {
     ENVOY_LOG(debug,
               "creating a HappyEyeballsConnectionImpl with a TransportSocketConnectionProvider");
     std::vector<Network::TransportSocketFactory*> factories{&socket_factory};
     absl::node_hash_set<std::string> names;
-
     const auto s = cluster.metadata().filter_metadata().find("envoy.transport_socket_list")->second;
     auto sockets = s.fields().find("sockets")->second;
+    ASSERT(sockets.kind_case() == ProtobufWkt::Value::kListValue);
     for (const auto& socket : sockets.list_value().values()) {
       envoy::config::core::v3::Metadata metadata;
       auto& match = (*metadata.mutable_filter_metadata())[Envoy::Config::MetadataFilters::get()
@@ -361,9 +365,6 @@ Network::ClientConnectionPtr HostImpl::createConnection(
         dispatcher, std::make_unique<Network::TransportSocketConnectionProvider>(
                         dispatcher, address, cluster.sourceAddress(), factories,
                         transport_socket_options, connection_options));
-    // connection = std::make_unique<Network::MagicTlsConnectionImpl>(
-    //     dispatcher, address, cluster.sourceAddress(), socket_factory, transport_socket_options,
-    //     connection_options);
   } else if (address_list.size() > 1) {
     ENVOY_LOG(debug,
               "creating a HappyEyeballsConnectionImpl with a HappyEyeballsConnectionProvider");
