@@ -1,5 +1,5 @@
-#include "source/common/network/happy_eyeballs_connection_impl.h"
 #include "connection_impl.h"
+#include "source/common/network/happy_eyeballs_connection_impl.h"
 
 #include <vector>
 
@@ -11,12 +11,9 @@ HappyEyeballsConnectionProvider::HappyEyeballsConnectionProvider(
     Address::InstanceConstSharedPtr source_address, TransportSocketFactory& socket_factory,
     TransportSocketOptionsConstSharedPtr transport_socket_options,
     const ConnectionSocket::OptionsSharedPtr options)
-    : dispatcher_(dispatcher),
-      address_list_(sortAddresses(address_list)),
-      source_address_(source_address),
-      socket_factory_(socket_factory),
-      transport_socket_options_(transport_socket_options),
-      options_(options) {}
+    : dispatcher_(dispatcher), address_list_(sortAddresses(address_list)),
+      source_address_(source_address), socket_factory_(socket_factory),
+      transport_socket_options_(transport_socket_options), options_(options) {}
 
 bool HappyEyeballsConnectionProvider::hasNextConnection() {
   return next_address_ < address_list_.size();
@@ -24,19 +21,16 @@ bool HappyEyeballsConnectionProvider::hasNextConnection() {
 
 ClientConnectionPtr HappyEyeballsConnectionProvider::createNextConnection(const uint64_t id) {
   ASSERT(hasNextConnection());
-  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] address={}", id, address_list_[next_address_]);
+  ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] address={}", id,
+                  address_list_[next_address_]);
   return dispatcher_.createClientConnection(
       address_list_[next_address_++], source_address_,
       socket_factory_.createTransportSocket(transport_socket_options_), options_);
 }
 
-size_t HappyEyeballsConnectionProvider::nextAttempt() {
-  return next_address_;
-}
+size_t HappyEyeballsConnectionProvider::nextAttempt() { return next_address_; }
 
-size_t HappyEyeballsConnectionProvider::totalAttempts() {
-  return address_list_.size();
-}
+size_t HappyEyeballsConnectionProvider::totalAttempts() { return address_list_.size(); }
 
 namespace {
 bool hasMatchingAddressFamily(const Address::InstanceConstSharedPtr& a,
@@ -47,8 +41,8 @@ bool hasMatchingAddressFamily(const Address::InstanceConstSharedPtr& a,
 
 } // namespace
 
-std::vector<Address::InstanceConstSharedPtr>
-HappyEyeballsConnectionProvider::sortAddresses(const std::vector<Address::InstanceConstSharedPtr>& in) {
+std::vector<Address::InstanceConstSharedPtr> HappyEyeballsConnectionProvider::sortAddresses(
+    const std::vector<Address::InstanceConstSharedPtr>& in) {
   std::vector<Address::InstanceConstSharedPtr> address_list;
   address_list.reserve(in.size());
   // Iterator which will advance through all addresses matching the first family.
@@ -78,14 +72,12 @@ HappyEyeballsConnectionProvider::sortAddresses(const std::vector<Address::Instan
 
 TransportSocketConnectionProvider::TransportSocketConnectionProvider(
     Event::Dispatcher& dispatcher, Address::InstanceConstSharedPtr address,
-    Address::InstanceConstSharedPtr source_address, const std::vector<TransportSocketFactory*>& socket_factories,
+    Address::InstanceConstSharedPtr source_address,
+    const std::vector<TransportSocketFactory*>& socket_factories,
     TransportSocketOptionsConstSharedPtr transport_socket_options,
     const ConnectionSocket::OptionsSharedPtr options)
-    : dispatcher_(dispatcher),
-      address_(address),
-      source_address_(source_address),
-      socket_factories_(socket_factories),
-      transport_socket_options_(transport_socket_options),
+    : dispatcher_(dispatcher), address_(address), source_address_(source_address),
+      socket_factories_(socket_factories), transport_socket_options_(transport_socket_options),
       options_(options) {}
 
 bool TransportSocketConnectionProvider::hasNextConnection() {
@@ -97,40 +89,40 @@ ClientConnectionPtr TransportSocketConnectionProvider::createNextConnection(cons
   ENVOY_LOG_EVENT(debug, "happy_eyeballs_cx_attempt", "C[{}] next_factory={}", id, next_factory_);
   return dispatcher_.createClientConnection(
       address_, source_address_,
-      socket_factories_[next_factory_++]->createTransportSocket(transport_socket_options_), options_);
+      socket_factories_[next_factory_++]->createTransportSocket(transport_socket_options_),
+      options_);
 }
 
-size_t TransportSocketConnectionProvider::nextAttempt() {
-  return next_factory_;
-}
+size_t TransportSocketConnectionProvider::nextAttempt() { return next_factory_; }
 
-size_t TransportSocketConnectionProvider::totalAttempts() {
-  return socket_factories_.size();
-}
+size_t TransportSocketConnectionProvider::totalAttempts() { return socket_factories_.size(); }
 
-HappyEyeballsConnectionImpl::HappyEyeballsConnectionImpl(
-    Event::Dispatcher& dispatcher, ConnectionProviderPtr connection_provider)
+HappyEyeballsConnectionImpl::HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher,
+                                                         ConnectionProviderPtr connection_provider)
     : id_(ConnectionImpl::next_global_id_++), dispatcher_(dispatcher),
       connection_provider_(std::move(connection_provider)),
       next_attempt_timer_(dispatcher_.createTimer([this]() -> void { tryAnotherConnection(); })) {
-  ENVOY_LOG_EVENT(debug, "happy_eyeballs_new_cx", "[C{}] connection_provider={}", id_, connection_provider_->debugString());
-  std::cout << "HappyEyeballsConnectionImpl, dispatcher " << static_cast<void*>(&dispatcher_) << " timer " << static_cast<void*>(&next_attempt_timer_) << std::endl;
+  ENVOY_LOG_EVENT(debug, "happy_eyeballs_new_cx", "[C{}] connection_provider={}", id_,
+                  connection_provider_->debugString());
+  std::cout << "HappyEyeballsConnectionImpl, dispatcher " << static_cast<void*>(&dispatcher_)
+            << " timer " << static_cast<void*>(&next_attempt_timer_) << std::endl;
 
   connections_.push_back(createNextConnection());
 }
 
 // HappyEyeballsConnectionImpl::HappyEyeballsConnectionImpl(
-//     Event::Dispatcher& dispatcher, const std::vector<Address::InstanceConstSharedPtr>& address_list,
-//     Address::InstanceConstSharedPtr source_address, TransportSocketFactory& socket_factory,
-//     TransportSocketOptionsConstSharedPtr transport_socket_options,
-//     const ConnectionSocket::OptionsSharedPtr options)
-//     : id_(ConnectionImpl::next_global_id_++), dispatcher_(dispatcher),
+//     Event::Dispatcher& dispatcher, const std::vector<Address::InstanceConstSharedPtr>&
+//     address_list, Address::InstanceConstSharedPtr source_address, TransportSocketFactory&
+//     socket_factory, TransportSocketOptionsConstSharedPtr transport_socket_options, const
+//     ConnectionSocket::OptionsSharedPtr options) : id_(ConnectionImpl::next_global_id_++),
+//     dispatcher_(dispatcher),
 //       address_list_(sortAddresses(address_list)),
 //       connection_construction_state_(
 //           {source_address, socket_factory, transport_socket_options, options}),
-//       next_attempt_timer_(dispatcher_.createTimer([this]() -> void { tryAnotherConnection(); })) {
-//   ENVOY_LOG_EVENT(debug, "happy_eyeballs_new_cx", "[C{}] addresses={}", id_, address_list_.size());
-//   connections_.push_back(createNextConnection());
+//       next_attempt_timer_(dispatcher_.createTimer([this]() -> void { tryAnotherConnection(); }))
+//       {
+//   ENVOY_LOG_EVENT(debug, "happy_eyeballs_new_cx", "[C{}] addresses={}", id_,
+//   address_list_.size()); connections_.push_back(createNextConnection());
 // }
 
 HappyEyeballsConnectionImpl::~HappyEyeballsConnectionImpl() = default;
@@ -500,7 +492,8 @@ void HappyEyeballsConnectionImpl::dumpState(std::ostream& os, int indent_level) 
 }
 
 // std::vector<Address::InstanceConstSharedPtr>
-// HappyEyeballsConnectionImpl::sortAddresses(const std::vector<Address::InstanceConstSharedPtr>& in) {
+// HappyEyeballsConnectionImpl::sortAddresses(const std::vector<Address::InstanceConstSharedPtr>&
+// in) {
 //   std::vector<Address::InstanceConstSharedPtr> address_list;
 //   address_list.reserve(in.size());
 //   // Iterator which will advance through all addresses matching the first family.
@@ -512,12 +505,14 @@ void HappyEyeballsConnectionImpl::dumpState(std::ostream& os, int indent_level) 
 //     if (first != in.end()) {
 //       address_list.push_back(*first);
 //       first = std::find_if(first + 1, in.end(),
-//                            [&](const auto& val) { return hasMatchingAddressFamily(in[0], val); });
+//                            [&](const auto& val) { return hasMatchingAddressFamily(in[0], val);
+//                            });
 //     }
 
 //     if (other != in.end()) {
 //       other = std::find_if(other + 1, in.end(),
-//                            [&](const auto& val) { return !hasMatchingAddressFamily(in[0], val); });
+//                            [&](const auto& val) { return !hasMatchingAddressFamily(in[0], val);
+//                            });
 
 //       if (other != in.end()) {
 //         address_list.push_back(*other);
@@ -579,7 +574,8 @@ void HappyEyeballsConnectionImpl::maybeScheduleNextAttempt() {
 void HappyEyeballsConnectionImpl::onEvent(ConnectionEvent event,
                                           ConnectionCallbacksWrapper* wrapper) {
   if (event == ConnectionEvent::Connected) {
-    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_ok", "address={}", *this, connection_provider_->nextAttempt());
+    ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_ok", "address={}", *this,
+                         connection_provider_->nextAttempt());
   } else {
     ENVOY_CONN_LOG_EVENT(debug, "happy_eyeballs_cx_attempt_failed", "address={}", *this,
                          connection_provider_->nextAttempt());

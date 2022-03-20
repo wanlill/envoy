@@ -340,13 +340,14 @@ Network::ClientConnectionPtr HostImpl::createConnection(
 
   Network::ClientConnectionPtr connection;
   if (cluster.metadata().filter_metadata().contains("envoy.transport_socket_list")) {
-    ENVOY_LOG(debug, "creating a HappyEyeballsConnectionImpl with a TransportSocketConnectionProvider");
+    ENVOY_LOG(debug,
+              "creating a HappyEyeballsConnectionImpl with a TransportSocketConnectionProvider");
     std::vector<Network::TransportSocketFactory*> factories{&socket_factory};
     absl::node_hash_set<std::string> names;
 
     const auto s = cluster.metadata().filter_metadata().find("envoy.transport_socket_list")->second;
     auto sockets = s.fields().find("sockets")->second;
-    for (const auto &socket : sockets.list_value().values()) {
+    for (const auto& socket : sockets.list_value().values()) {
       envoy::config::core::v3::Metadata metadata;
       auto& match = (*metadata.mutable_filter_metadata())[Envoy::Config::MetadataFilters::get()
                                                               .ENVOY_TRANSPORT_SOCKET_MATCH];

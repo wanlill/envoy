@@ -96,12 +96,12 @@ private:
 class TransportSocketConnectionProvider : public virtual ConnectionProvider,
                                           Logger::Loggable<Logger::Id::happy_eyeballs> {
 public:
-  TransportSocketConnectionProvider(
-      Event::Dispatcher& dispatcher,
-      Address::InstanceConstSharedPtr address,
-      Address::InstanceConstSharedPtr source_address, const std::vector<TransportSocketFactory*>& socket_factories,
-      TransportSocketOptionsConstSharedPtr transport_socket_options,
-      const ConnectionSocket::OptionsSharedPtr options);
+  TransportSocketConnectionProvider(Event::Dispatcher& dispatcher,
+                                    Address::InstanceConstSharedPtr address,
+                                    Address::InstanceConstSharedPtr source_address,
+                                    const std::vector<TransportSocketFactory*>& socket_factories,
+                                    TransportSocketOptionsConstSharedPtr transport_socket_options,
+                                    const ConnectionSocket::OptionsSharedPtr options);
   bool hasNextConnection() override;
   ClientConnectionPtr createNextConnection(const uint64_t id) override;
   size_t nextAttempt() override;
@@ -137,7 +137,8 @@ private:
 class HappyEyeballsConnectionImpl : public ClientConnection,
                                     Logger::Loggable<Logger::Id::happy_eyeballs> {
 public:
-  HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher, ConnectionProviderPtr connection_provider);
+  HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher,
+                              ConnectionProviderPtr connection_provider);
   // HappyEyeballsConnectionImpl(Event::Dispatcher& dispatcher,
   //                             const std::vector<Address::InstanceConstSharedPtr>& address_list,
   //                             Address::InstanceConstSharedPtr source_address,
