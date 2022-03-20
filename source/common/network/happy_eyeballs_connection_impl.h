@@ -112,7 +112,7 @@ private:
   Address::InstanceConstSharedPtr address_;
   Address::InstanceConstSharedPtr source_address_;
   // List of transport socket factories to try.
-  const std::vector<TransportSocketFactory*>& socket_factories_;
+  const std::vector<TransportSocketFactory*> socket_factories_;
   TransportSocketOptionsConstSharedPtr transport_socket_options_;
   const ConnectionSocket::OptionsSharedPtr options_;
   // Index of the next transport socket factory to try.
