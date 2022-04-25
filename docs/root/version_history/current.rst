@@ -13,6 +13,7 @@ Minor Behavior Changes
 
 * tls: if both :ref:`match_subject_alt_names <envoy_v3_api_field_extensions.transport_sockets.tls.v3.CertificateValidationContext.match_subject_alt_names>` and :ref:`match_typed_subject_alt_names <envoy_v3_api_field_extensions.transport_sockets.tls.v3.CertificateValidationContext.match_typed_subject_alt_names>` are specified, the former (deprecated) field is ignored. Previously, setting both fields would result in an error.
 * tls: removed SHA-1 cipher suites from the server-side defaults.
+* dns: added ``envoy.reloadable_features.cares_accept_enodata`` to allow propagating DNS responses with no records back to STRICT_DNS clusters.
 
 Bug Fixes
 ---------

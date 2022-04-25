@@ -1,5 +1,6 @@
 #include "source/extensions/network/dns_resolver/cares/dns_impl.h"
 
+#include <ares.h>
 #include <chrono>
 #include <cstdint>
 #include <list>
@@ -16,6 +17,7 @@
 #include "source/common/network/address_impl.h"
 #include "source/common/network/resolver_impl.h"
 #include "source/common/network/utility.h"
+#include "source/common/runtime/runtime_impl.h"
 
 #include "absl/strings/str_join.h"
 #include "ares.h"
@@ -129,8 +131,11 @@ void DnsResolverImpl::AddrInfoPendingResolution::onAresGetAddrInfoCallback(
   pending_resolutions_--;
 
   if (status != ARES_SUCCESS) {
-    ENVOY_LOG_EVENT(debug, "cares_resolution_failure",
-                    "dns resolution for {} failed with c-ares status {}", dns_name_, status);
+    if (!Runtime::runtimeFeatureEnabled("envoy.reloadable_features.cares_accept_enodata") ||
+        status != ARES_ENODATA) {
+      ENVOY_LOG_EVENT(debug, "cares_resolution_failure",
+                      "dns resolution for {} failed with c-ares status {}", dns_name_, status);
+    }
   }
 
   // We receive ARES_EDESTRUCTION when destructing with pending queries.
@@ -208,6 +213,9 @@ void DnsResolverImpl::AddrInfoPendingResolution::onAresGetAddrInfoCallback(
 
     ASSERT(addrinfo != nullptr);
     ares_freeaddrinfo(addrinfo);
+  } else if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.cares_accept_enodata") && status == ARES_ENODATA && !dual_resolution_) {
+    // Treat ARES_ENODATA here as success for last attempt to populate back the "empty records" response.
+    pending_response_.status_ = ResolutionStatus::Success;
   }
 
   if (timeouts > 0) {
