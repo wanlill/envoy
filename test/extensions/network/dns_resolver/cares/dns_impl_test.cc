@@ -67,7 +67,8 @@ using CNameMap = absl::node_hash_map<std::string, std::string>;
 class TestDnsServerQuery {
 public:
   TestDnsServerQuery(ConnectionPtr connection, const HostMap& hosts_a, const HostMap& hosts_aaaa,
-                     const CNameMap& cnames, const std::chrono::seconds& record_ttl, bool refused, bool nodata_ok)
+                     const CNameMap& cnames, const std::chrono::seconds& record_ttl, bool refused,
+                     bool nodata_ok)
       : connection_(std::move(connection)), hosts_a_(hosts_a), hosts_aaaa_(hosts_aaaa),
         cnames_(cnames), record_ttl_(record_ttl), refused_(refused), nodata_ok_(nodata_ok) {
     connection_->addReadFilter(Network::ReadFilterSharedPtr{new ReadFilter(*this)});
@@ -232,7 +233,8 @@ private:
       if (parent_.refused_) {
         DNS_HEADER_SET_RCODE(response_base, REFUSED);
       } else {
-        DNS_HEADER_SET_RCODE(response_base, (answer_count > 0 || parent_.nodata_ok_) ? NOERROR : NXDOMAIN);
+        DNS_HEADER_SET_RCODE(response_base,
+                             (answer_count > 0 || parent_.nodata_ok_) ? NOERROR : NXDOMAIN);
       }
       DNS_HEADER_SET_ANCOUNT(response_base, answer_count);
       DNS_HEADER_SET_NSCOUNT(response_base, 0);
@@ -328,8 +330,9 @@ public:
   void onAccept(ConnectionSocketPtr&& socket) override {
     Network::ConnectionPtr new_connection = dispatcher_.createServerConnection(
         std::move(socket), Network::Test::createRawBufferSocket(), stream_info_);
-    TestDnsServerQuery* query = new TestDnsServerQuery(std::move(new_connection), hosts_a_,
-                                                       hosts_aaaa_, cnames_, record_ttl_, refused_, nodata_ok_);
+    TestDnsServerQuery* query =
+        new TestDnsServerQuery(std::move(new_connection), hosts_a_, hosts_aaaa_, cnames_,
+                               record_ttl_, refused_, nodata_ok_);
     queries_.emplace_back(query);
   }
 
@@ -1326,33 +1329,33 @@ INSTANTIATE_TEST_SUITE_P(IpVersions, DnsImplAcceptEnodataTest,
 
 TEST_P(DnsImplAcceptEnodataTest, AcceptEnodataEnabledV4) {
   server_->addHosts("some.good.domain", {"201.134.56.7"}, RecordType::A);
-  EXPECT_NE(nullptr,
-            resolveWithExpectations("some.good.domain", DnsLookupFamily::V4Only,
-                                    DnsResolver::ResolutionStatus::Success, {"201.134.56.7"}, {}, absl::nullopt));
+  EXPECT_NE(nullptr, resolveWithExpectations("some.good.domain", DnsLookupFamily::V4Only,
+                                             DnsResolver::ResolutionStatus::Success,
+                                             {"201.134.56.7"}, {}, absl::nullopt));
   dispatcher_->run(Event::Dispatcher::RunType::Block);
 }
 
 TEST_P(DnsImplAcceptEnodataTest, AcceptEnodataEnabledV6) {
   server_->addHosts("some.good.domain", {"1::2"}, RecordType::AAAA);
-  EXPECT_NE(nullptr,
-            resolveWithExpectations("some.good.domain", DnsLookupFamily::V6Only,
-                                    DnsResolver::ResolutionStatus::Success, {"1::2"}, {}, absl::nullopt));
+  EXPECT_NE(nullptr, resolveWithExpectations("some.good.domain", DnsLookupFamily::V6Only,
+                                             DnsResolver::ResolutionStatus::Success, {"1::2"}, {},
+                                             absl::nullopt));
   dispatcher_->run(Event::Dispatcher::RunType::Block);
 }
 
 TEST_P(DnsImplAcceptEnodataTest, AcceptEnodataEnabledAuto) {
   server_->addHosts("some.good.domain", {"201.134.56.7"}, RecordType::A);
-  EXPECT_NE(nullptr,
-            resolveWithExpectations("some.good.domain", DnsLookupFamily::Auto,
-                                    DnsResolver::ResolutionStatus::Success, {"201.134.56.7"}, {}, absl::nullopt));
+  EXPECT_NE(nullptr, resolveWithExpectations("some.good.domain", DnsLookupFamily::Auto,
+                                             DnsResolver::ResolutionStatus::Success,
+                                             {"201.134.56.7"}, {}, absl::nullopt));
   dispatcher_->run(Event::Dispatcher::RunType::Block);
 }
 
 TEST_P(DnsImplAcceptEnodataTest, AcceptEnodataEnabledV4Preferred) {
   server_->addHosts("some.good.domain", {"1::2"}, RecordType::AAAA);
-  EXPECT_NE(nullptr,
-            resolveWithExpectations("some.good.domain", DnsLookupFamily::V4Preferred,
-                                    DnsResolver::ResolutionStatus::Success, {"1::2"}, {}, absl::nullopt));
+  EXPECT_NE(nullptr, resolveWithExpectations("some.good.domain", DnsLookupFamily::V4Preferred,
+                                             DnsResolver::ResolutionStatus::Success, {"1::2"}, {},
+                                             absl::nullopt));
   dispatcher_->run(Event::Dispatcher::RunType::Block);
 }
 

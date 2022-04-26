@@ -1,6 +1,7 @@
 #include "source/extensions/network/dns_resolver/cares/dns_impl.h"
 
 #include <ares.h>
+
 #include <chrono>
 #include <cstdint>
 #include <list>
@@ -214,7 +215,8 @@ void DnsResolverImpl::AddrInfoPendingResolution::onAresGetAddrInfoCallback(
     ASSERT(addrinfo != nullptr);
     ares_freeaddrinfo(addrinfo);
   } else if (parent_.accept_enodata_ && status == ARES_ENODATA && !dual_resolution_) {
-    // Treat ARES_ENODATA here as success for last attempt to populate back the "empty records" response.
+    // Treat ARES_ENODATA here as success for last attempt to populate back the "empty records"
+    // response.
     pending_response_.status_ = ResolutionStatus::Success;
   }
 
