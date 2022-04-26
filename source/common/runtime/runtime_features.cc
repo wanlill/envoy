@@ -33,7 +33,6 @@ RUNTIME_GUARD(envoy_reloadable_features_allow_adding_content_type_in_local_repli
 RUNTIME_GUARD(envoy_reloadable_features_allow_upstream_inline_write);
 RUNTIME_GUARD(envoy_reloadable_features_append_or_truncate);
 RUNTIME_GUARD(envoy_reloadable_features_append_to_accept_content_encoding_only_once);
-RUNTIME_GUARD(envoy_reloadable_features_cares_accept_enodata);
 RUNTIME_GUARD(envoy_reloadable_features_conn_pool_delete_when_idle);
 RUNTIME_GUARD(envoy_reloadable_features_conn_pool_new_stream_with_early_data_and_http3);
 RUNTIME_GUARD(envoy_reloadable_features_correct_scheme_and_xfp);
@@ -91,6 +90,8 @@ FALSE_RUNTIME_GUARD(envoy_reloadable_features_thrift_connection_draining);
 // TODO(birenroy) flip after a burn-in period
 // Requires envoy_reloadable_features_http2_new_codec_wrapper to be enabled.
 FALSE_RUNTIME_GUARD(envoy_reloadable_features_http2_use_oghttp2);
+// TODO(wanlill) flip after a burn-in period
+FALSE_RUNTIME_GUARD(envoy_reloadable_features_cares_accept_enodata);
 
 // Block of non-boolean flags. These are deprecated. Do not add more.
 ABSL_FLAG(uint64_t, envoy_headermap_lazy_map_min_size, 3, "");  // NOLINT

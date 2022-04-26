@@ -34,7 +34,8 @@ DnsResolverImpl::DnsResolverImpl(
       dns_resolver_options_(config.dns_resolver_options()),
       use_resolvers_as_fallback_(config.use_resolvers_as_fallback()),
       resolvers_csv_(maybeBuildResolversCsv(resolvers)),
-      filter_unroutable_families_(config.filter_unroutable_families()) {
+      filter_unroutable_families_(config.filter_unroutable_families()),
+      accept_enodata_(config.accept_enodata()) {
   AresOptions options = defaultAresOptions();
   initializeChannel(&options.options_, options.optmask_);
 }
@@ -131,9 +132,8 @@ void DnsResolverImpl::AddrInfoPendingResolution::onAresGetAddrInfoCallback(
   pending_resolutions_--;
 
   if (status != ARES_SUCCESS) {
-    if (!Runtime::runtimeFeatureEnabled("envoy.reloadable_features.cares_accept_enodata") ||
-        status != ARES_ENODATA) {
-      ENVOY_LOG_EVENT(debug, "cares_resolution_failure",
+    if (!parent_.accept_enodata_ || status != ARES_ENODATA) {
+      ENVOY_LOG_EVENT(critical, "cares_resolution_failure",
                       "dns resolution for {} failed with c-ares status {}", dns_name_, status);
     }
   }
@@ -213,7 +213,7 @@ void DnsResolverImpl::AddrInfoPendingResolution::onAresGetAddrInfoCallback(
 
     ASSERT(addrinfo != nullptr);
     ares_freeaddrinfo(addrinfo);
-  } else if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.cares_accept_enodata") && status == ARES_ENODATA && !dual_resolution_) {
+  } else if (parent_.accept_enodata_ && status == ARES_ENODATA && !dual_resolution_) {
     // Treat ARES_ENODATA here as success for last attempt to populate back the "empty records" response.
     pending_response_.status_ = ResolutionStatus::Success;
   }
